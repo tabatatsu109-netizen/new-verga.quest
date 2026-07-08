@@ -2333,7 +2333,7 @@ function startForest(){
     $("#seal-lock").classList.remove("open","unlocking");
     $("#hint-btn").style.display="";
     $("#hint-text").innerHTML="";
-    codeBuf=""; renderCode();
+    codeBuf=""; codeLock=false; renderCode();
     $("#unlock-wrap").classList.add("show");
     return;
   }

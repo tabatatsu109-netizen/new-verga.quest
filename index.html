@@ -335,6 +335,15 @@ img{pointer-events:none;-webkit-user-drag:none;}
 }
 #tree-glow.on{opacity:1;}
 @keyframes treePulse{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.35);}}
+#kakera-sparkle{
+  position:absolute;width:8%;aspect-ratio:1;display:none;
+  align-items:center;justify-content:center;font-size:clamp(20px,4.5vmin,32px);
+  border-radius:50%;cursor:pointer;z-index:6;
+  background:radial-gradient(circle,rgba(255,250,200,.9) 0%,rgba(255,230,140,.5) 55%,rgba(255,230,140,0) 75%);
+  animation:kakeraPulse 1s ease-in-out infinite;
+}
+#kakera-sparkle.show{display:flex;}
+@keyframes kakeraPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.25);}}
 .menu-hot{position:absolute;bottom:0;height:11.5%;cursor:pointer;}
 
 /* ===== FOREST ===== */
@@ -1103,6 +1112,7 @@ img{pointer-events:none;-webkit-user-drag:none;}
         </div>
       </div>
       <div id="wizard-bubble"></div>
+      <div id="kakera-sparkle">✨</div>
 
       <div class="pin-hot" data-pin="1" style="left:42.2%;top:46.8%;"></div>
       <div class="pin-hot" data-pin="2" style="left:28.7%;top:70.5%;"></div>
@@ -1573,9 +1583,19 @@ const AREAS = {
 let currentArea="forest";
 function areaAllChalDone(key){ const c=state.areas[key].chal; return c.quiz && c.riddle && c.photo; }
 
+/* ============ 生命の樹のかけら ============ */
+const KAKERA = {
+  ne:      { name:"根のかけら",  icon:"🌱", desc:"たくさんの精霊をあつめた証" },
+  ha:      { name:"葉のかけら",  icon:"🍃", desc:"ひとつのエリアをやりとげた証" },
+  hikari:  { name:"光のかけら",  icon:"✨", desc:"ぐうぜんの幸運に出会えた証" },
+  honoo:   { name:"炎のかけら",  icon:"🔥", desc:"生命の樹を救った証" },
+  shizuku: { name:"雫のかけら",  icon:"🌊", desc:"べるがに隠された謎を解いた証" },
+};
+const KAKERA_PASSWORD = "みずのこえ"; // デモ用仮値。現地の隠し場所に合わせて後で変更する
+
 /* ============ state ============ */
 const state = {
-  version:2,
+  version:3,
   startedAt:null,
   lv:1, exp:0,
   name:"ぼうけんしゃ",
@@ -1586,6 +1606,7 @@ const state = {
     forest:{unlocked:false, chal:{quiz:false, riddle:false, photo:false}, introDone:false},
     endei:{unlocked:false, chal:{quiz:false, riddle:false, photo:false}, introDone:false},
   },
+  kakera:{ ne:false, ha:false, hikari:false, honoo:false, shizuku:false },
   bossUnlocked:false,
   bossDefeated:false,
   battleCount:0,
@@ -1594,7 +1615,7 @@ function totalATK(){ return 12 + (state.lv-1)*4 + state.spirits.reduce((s,k)=>s+
 function totalDEF(){ return (state.lv-1)*3 + state.spirits.reduce((s,k)=>s+SPIRITS[k].def,0); }
 
 /* ============ 保存/復元(localStorage) ============ */
-const SAVE_KEY="vergaquest_save_v2";
+const SAVE_KEY="vergaquest_save_v3";
 function saveLocal(){
   try{
     localStorage.setItem(SAVE_KEY, JSON.stringify(state));
@@ -1605,7 +1626,7 @@ function loadLocal(){
     const raw=localStorage.getItem(SAVE_KEY);
     if(!raw) return null;
     const saved=JSON.parse(raw);
-    if(!saved || saved.version!==2 || !saved.name) return null;
+    if(!saved || saved.version!==3 || !saved.name) return null;
     saved.spirits=(saved.spirits||[]).filter(k=>SPIRITS[k]);
     saved.items=(saved.items||[]).filter(k=>ITEMS[k]);
     saved.areas=Object.assign(
@@ -1615,8 +1636,36 @@ function loadLocal(){
       },
       saved.areas
     );
+    saved.kakera=Object.assign(
+      { ne:false, ha:false, hikari:false, honoo:false, shizuku:false },
+      saved.kakera
+    );
     return saved;
   }catch(e){ return null; }
+}
+
+/* ============ 生命の樹のかけら ============ */
+function grantKakera(key){
+  if(state.kakera[key]) return;
+  state.kakera[key]=true;
+  saveLocal();
+  const k=KAKERA[key];
+  toast(`${k.icon} <b>${k.name}</b>を てにいれた！`,3200);
+  burstSparkles(innerWidth/2,innerHeight*0.35,16);
+  checkKakeraComplete();
+}
+function kakeraCount(){ return Object.values(state.kakera).filter(Boolean).length; }
+function checkKakeraComplete(){
+  if(kakeraCount()<5) return;
+  setTimeout(()=>{
+    flashWhite();
+    confettiRain(80);
+    openModal(`<h3>🌳✨ かけらコンプリート！ ✨🌳</h3>
+      <div class="body">${state.name}は、生命の樹のかけらを<br><b>ぜんぶ</b> あつめた！</div>
+      <div style="font-size:2em;margin:.3em 0;">${Object.keys(KAKERA).map(k=>KAKERA[k].icon).join(" ")}</div>
+      <div class="body">この画面を、<b>総合案内所</b>のスタッフに見せてね！<br>すてきなプレゼントが もらえるよ🎁</div>
+      <button class="fbtn gold" onclick="closeModal()">やった！</button>`);
+  },600);
 }
 
 /* ============ 実績送信(Firebase, 失敗しても無視) ============ */
@@ -2057,8 +2106,10 @@ function enterMap(withZoom=false){
   }else if(!state.areas.forest.unlocked){
     setTimeout(()=>wizardSay(`<b>③尾白の森</b> をタップじゃ、${state.name}！`,3600),400);
   }
+  scheduleKakeraSparkle();
 }
 function enterArea(key){
+  hideKakeraSparkle();
   currentArea=key;
   const cfg=AREAS[key];
   $("#forest-bg-blur").src=IMG[cfg.bg];
@@ -2067,6 +2118,36 @@ function enterArea(key){
   playBGM(cfg.bgm);
   startForest();
 }
+/* ============ 光のかけら(ランダムイベント) ============ */
+let kakeraSparkleTimer=null;
+function scheduleKakeraSparkle(){
+  clearTimeout(kakeraSparkleTimer);
+  if(state.kakera.hikari) return;
+  const delay=20000+Math.random()*30000;
+  kakeraSparkleTimer=setTimeout(()=>{
+    if(state.kakera.hikari || !$("#scr-map").classList.contains("active")) return;
+    const el=$("#kakera-sparkle");
+    el.style.left=(15+Math.random()*70)+"%";
+    el.style.top=(18+Math.random()*60)+"%";
+    el.classList.add("show");
+    kakeraSparkleTimer=setTimeout(()=>{
+      el.classList.remove("show");
+      scheduleKakeraSparkle();
+    },5000);
+  },delay);
+}
+function hideKakeraSparkle(){
+  clearTimeout(kakeraSparkleTimer);
+  $("#kakera-sparkle").classList.remove("show");
+}
+$("#kakera-sparkle").addEventListener("click",e=>{
+  e.stopPropagation();
+  clearTimeout(kakeraSparkleTimer);
+  $("#kakera-sparkle").classList.remove("show");
+  sPop(); buzz(20);
+  burstSparkles(e.clientX,e.clientY,14);
+  grantKakera("hikari");
+});
 function updateHUD(){
   $("#hud-lv").textContent=state.lv;
   $("#hud-zukan").textContent=state.spirits.length;
@@ -2118,14 +2199,41 @@ function openTreeModal(){
     return `<button class="fbtn ghost" style="margin:4px;font-size:.8em;padding:.6em 1em;" onclick="startBonusSummon('${g}')">${m.icon} ${m.tag}</button>`;
   }).join("");
   const canSummon = state.drops>0;
+  const kakeraGrid = Object.keys(KAKERA).map(k=>{
+    const got=state.kakera[k];
+    const info=KAKERA[k];
+    return `<div style="display:inline-block;text-align:center;margin:4px 8px;opacity:${got?1:.35};">
+      <div style="font-size:1.8em;">${info.icon}</div>
+      <div style="font-size:.65em;max-width:4.5em;">${got?info.name:"？？？"}</div>
+    </div>`;
+  }).join("");
   openModal(`<h3>🌳 生命の樹</h3>
     <div class="body">回復した力：<b style="font-size:1.3em;color:#3f7d33;">${state.spirits.length} / ${SPIRIT_TOTAL}</b><br>
     精霊を見つけるほど 生命の樹は元気になるよ！</div>
     <div class="body" style="margin-top:.6em;">💧 いのちのしずく：<b>${state.drops}</b>こ<br>
     ${canSummon ? "しずくを1こ ささげると、えらんだお題で精霊をもういちど呼べるよ！" : "しずくが たまったら、精霊をもういちど呼べるようになるよ！"}</div>
     <div style="display:flex;flex-wrap:wrap;justify-content:center;">${canSummon ? genreBtns : ""}</div>
+    <div class="body" style="margin-top:.8em;">🌟 生命の樹のかけら（${kakeraCount()} / 5）</div>
+    <div>${kakeraGrid}</div>
+    <div class="hint-line" style="margin-top:.5em;">
+      <input type="text" id="kakera-pw-input" placeholder="🔒 ひみつのあい言葉" style="padding:.4em .7em;border-radius:8px;border:1px solid #8a6238;font-size:.85em;width:9em;">
+      <button class="hint-btn" onclick="checkKakeraPassword()">たしかめる</button>
+    </div>
     <button class="fbtn" onclick="closeModal()" style="margin-top:.6em;">とじる</button>`);
 }
+window.checkKakeraPassword=function(){
+  const el=$("#kakera-pw-input");
+  const v=(el&&el.value||"").trim();
+  if(!v) return;
+  if(v===KAKERA_PASSWORD){
+    sOk();
+    grantKakera("shizuku");
+    openTreeModal();
+  }else{
+    sNg();
+    toast("❌ ちがうみたい…");
+  }
+};
 function rtag(r){ return `<span class="rtag ${r}">${r}</span>`; }
 function openZukan(){
   let cells="";
@@ -2359,6 +2467,7 @@ function chalCleared(k){
   saveLocal();
   updateHUD();
   if(areaKey==="forest" && allChalDone()){
+    grantKakera("ha");
     runDialogue([
       `すごい、すごいよ ${state.name}！\n3つのちょうせん、ぜんぶクリアだ！`,
       "……ん？ なんだか\n生命の樹のほうから、いやなけはいが……！",
@@ -2370,6 +2479,7 @@ function chalCleared(k){
       });
     });
   }else if(areaKey!=="forest" && areaAllChalDone(areaKey)){
+    grantKakera("ha");
     const cfg=AREAS[areaKey];
     runDialogue([`やったね、${state.name}！\n${cfg.unlockLabel}のちょうせんも ぜんぶクリアだ！`],()=>{
       wipeTo(()=>{
@@ -2635,6 +2745,7 @@ function spiritGet(key,cb){
   let leveledUp=false;
   while(state.exp>=100){ state.exp-=100; state.lv++; leveledUp=true; }
   saveLocal();
+  if(state.spirits.length>=10) grantKakera("ne");
   getCb=cb;
   flashWhite();
   show("#scr-get");
@@ -2715,6 +2826,7 @@ function openBattleConfirm(){
 /* ============ バトル ============ */
 const battle={bhp:0,bmax:420,php:0,pmax:0,skills:[],drops:0,busy:false,enraged:false,turns:0,weakenTurns:0,poisonTurns:0,poisonDmg:0};
 function startBattle(){
+  hideKakeraSparkle();
   sBossRoar();
   state.battleCount++;
   saveLocal();
@@ -2916,6 +3028,7 @@ function winBattle(){
   state.bossDefeated=true;
   saveLocal();
   reportCompletion();
+  grantKakera("honoo");
   stopBGM();
   flashWhite(); flashWhite();
   sGet(); fanfare(); buzz([80,60,80,60,200]);

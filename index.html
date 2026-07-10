@@ -2841,7 +2841,9 @@ function openBattleConfirm(){
   });
   if(state.drops>0) rows+=`<div class="party-row"><span style="font-size:1.5em;">💧</span><span class="pn">いのちのしずく × ${state.drops}</span><span class="ps">回復</span></div>`;
   openModal(`<h3>⚡ 闇の気配…</h3>
-    <div class="body">生命の樹のちかくに、<b>なにか</b>がいる…！<br>いまの なかまとアイテムで いどむ？</div>
+    <div class="body">生命の樹のちかくに、<b>なにか</b>がいる…！<br>
+    むかし、この森に あたたかな光をくばっていた<b>太陽の守護者</b>だった、といううわさも……。<br>
+    いまはその力が くろく染まってしまったみたい。いまの なかまとアイテムで いどむ？</div>
     ${rows}
     <div style="margin-top:1em;">
       <button class="fbtn ghost" style="margin:0 6px" onclick="closeModal()">まだやめておく</button>
@@ -2876,6 +2878,7 @@ function startBattle(){
     bLog(`${SPIRITS[state.spirits[0]]?SPIRITS[state.spirits[0]].name:"精霊"}たちと力をあわせて…\n<b>アーク・ヴェールガ</b>に いどむ！`);
     flashRed();
     const sh=$("#battle-shake"); sh.classList.remove("hit"); void sh.offsetWidth; sh.classList.add("hit");
+    setTimeout(()=>{ bLog(`アーク・ヴェールガ「その光…\nまぶしくて たまらない……！」`); },1100);
     setTimeout(()=>{ battle.busy=false; bLog("コマンドをえらぼう！"); },2200);
   });
 }
@@ -3066,7 +3069,7 @@ function winBattle(){
   const br=$("#battle-result");
   br.classList.add("show","win");
   $("#br-title").textContent="✨ しょうり！！ ✨";
-  $("#br-msg").innerHTML=`アーク・ヴェールガは 光にかえっていった…<br>生命の樹に、力がもどっていく…！`;
+  $("#br-msg").innerHTML=`アーク・ヴェールガは 光にかえっていった…<br>くろく染まった力が とけて、もとの あたたかな光がもどっていく…<br>生命の樹に、力がもどっていく…！`;
   $("#br-btns").innerHTML=`<button class="fbtn gold" id="br-next">つぎへ</button>`;
   $("#br-next").addEventListener("click",()=>{
     sOk();

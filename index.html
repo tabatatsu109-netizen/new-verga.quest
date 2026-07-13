@@ -1166,14 +1166,15 @@ img{pointer-events:none;-webkit-user-drag:none;}
     <!-- エリア解放(暗号) -->
     <div class="panel-wrap" id="unlock-wrap">
       <div class="panel" id="unlock-panel">
-        <div class="ribbon">🔐 封印されしエリア</div>
+        <div class="ribbon" id="unlock-ribbon">🔐 封印されしエリア</div>
         <svg id="seal-lock" viewBox="0 0 64 64">
           <path id="lock-shackle" d="M20 34 V22 a12 12 0 0 1 24 0 V34" fill="none" stroke="#8a6015" stroke-width="7" stroke-linecap="round"/>
           <rect x="12" y="30" width="40" height="28" rx="7" fill="#dfb254" stroke="#7a5a1e" stroke-width="4"/>
           <circle cx="32" cy="42" r="5" fill="#7a5a1e"/>
           <rect x="29.5" y="44" width="5" height="9" rx="2" fill="#7a5a1e"/>
         </svg>
-        <h2 style="font-size:clamp(15px,3.2vmin,22px);">この場所にかくされた<br>「暗号」を見つけて入力してね</h2>
+        <h2 id="unlock-question" style="font-size:clamp(15px,3.2vmin,22px);">この場所にかくされた<br>「暗号」を見つけて入力してね</h2>
+        <div class="hint-line" style="margin:-.3em 0 .6em;">答えを入力しましょう</div>
         <div class="code-boxes">
           <div class="code-box" id="cb0"></div>
           <div class="code-box" id="cb1"></div>
@@ -1588,10 +1589,18 @@ const PHOTO_ORDERS = [
 ];
 /* ============ エリア設定 ============ */
 const AREAS = {
-  forest:  { pinEl:"pin-forest",  labelEl:"forest-label",  code:"0000", hintDigits:"0 0 0 0", bg:"forest",   bgm:"field", unlockLabel:"森エリア", guideIntro:true },
-  endei:   { pinEl:"pin-endei",   labelEl:"endei-label",   code:"0000", hintDigits:"0 0 0 0", bg:"endei",    bgm:"field", unlockLabel:"えん堤エリア", guideIntro:false },
-  event:   { pinEl:"pin-event",   labelEl:"event-label",   code:"0000", hintDigits:"0 0 0 0", bg:"event",    bgm:"field", unlockLabel:"イベント広場エリア", guideIntro:false },
-  glamping:{ pinEl:"pin-glamping",labelEl:"glamping-label",code:"0000", hintDigits:"0 0 0 0", bg:"glamping", bgm:"field", unlockLabel:"グランピングエリア", guideIntro:false },
+  forest:  { pinEl:"pin-forest",  labelEl:"forest-label",  code:"0000", hintDigits:"0 0 0 0", bg:"forest",   bgm:"field", unlockLabel:"森エリア", guideIntro:true,
+    riddleTitle:"🦌 森の番人からの試練",
+    riddleBody:"森には私の仲間が隠れています。<br>角の数を教えてください。" },
+  endei:   { pinEl:"pin-endei",   labelEl:"endei-label",   code:"0000", hintDigits:"0 0 0 0", bg:"endei",    bgm:"field", unlockLabel:"えん堤エリア", guideIntro:false,
+    riddleTitle:"💧 水の精霊からの試練",
+    riddleBody:"堰のそばの階段を見つけてください。<br>ぜんぶで何段あるか教えてください。" },
+  event:   { pinEl:"pin-event",   labelEl:"event-label",   code:"0000", hintDigits:"0 0 0 0", bg:"event",    bgm:"field", unlockLabel:"イベント広場エリア", guideIntro:false,
+    riddleTitle:"⛲ 広場の妖精からの試練",
+    riddleBody:"広場の噴水のまわりを見てください。<br>ベンチはいくつありますか？" },
+  glamping:{ pinEl:"pin-glamping",labelEl:"glamping-label",code:"0000", hintDigits:"0 0 0 0", bg:"glamping", bgm:"field", unlockLabel:"グランピングエリア", guideIntro:false,
+    riddleTitle:"⛺ 森の宿り木からの試練",
+    riddleBody:"まるいテントをよく見てください。<br>三角の面はいくつでできていますか？" },
 };
 let currentArea="forest";
 function areaAllChalDone(key){ const c=state.areas[key].chal; return c.quiz && c.riddle && c.photo; }
@@ -2352,6 +2361,8 @@ function startForest(){
     $("#dlg-name").textContent="";
     $("#dlg-text").textContent="";
     $("#seal-lock").classList.remove("open","unlocking");
+    $("#unlock-ribbon").textContent=AREAS[currentArea].riddleTitle;
+    $("#unlock-question").innerHTML=AREAS[currentArea].riddleBody;
     $("#hint-btn").style.display="";
     $("#hint-btn").textContent="ヒントを見る";
     $("#hint-text").innerHTML="";

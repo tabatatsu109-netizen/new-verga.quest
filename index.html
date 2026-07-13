@@ -2076,7 +2076,9 @@ $("#title-continue").addEventListener("click",e=>{
 const storyPages=[
   "むかしむかし、このべるがの森には\n『生命の樹』という ふしぎな大樹がありました。",
   "生命の樹は、94人の精霊たちといっしょに\n森のいのちを 守っていました。",
+  "そして空には、あたたかな光で\n森と水を見守る「太陽の守護者」がいたそうです。",
   "けれど、ある日のこと……\n生命の樹の力が、弱まってしまったのです。",
+  "同じころ、太陽の守護者のすがたも、\nぱったりと見えなくなってしまいました……。",
   "おどろいた精霊たちは、\nべるがのあちこちへ 散りぢりに……。",
   "冒険者よ。どうか精霊たちを見つけて、\n生命の樹に 力を取りもどしてください。",
 ];
@@ -3183,19 +3185,35 @@ function loseBattle(){
     wipeTo(()=>{ enterMap(); setTimeout(()=>showEnding(false),1500); });
   });
 }
+function travelerTitle(){
+  const n=state.spirits.length;
+  if(n>=60) return "🏆 伝説の冒険者";
+  if(n>=30) return "🌟 べるがの英雄";
+  if(n>=10) return "🍃 森の友";
+  return "🌱 見習い冒険者";
+}
 function showEnding(won){
   const e=$("#ending");
   $("#ending-title").textContent = won ? "〜 だい1しょう・完 〜" : "〜 つづく 〜";
+  const kakeraComplete = kakeraCount()>=5;
   $("#ending-text").innerHTML = won
-    ? `モリノコ「ありがとう、${state.name}！<br>でも精霊はまだ <b>${SPIRIT_TOTAL-state.spirits.length}人</b> 森にかくれているよ。<br>ほんもののべるがで、また会おうね！」`
+    ? (kakeraComplete
+        ? `モリノコ「ありがとう、${state.name}！<br>生命の樹のかけらも ぜんぶそろえてくれたね……！<br>あなたは まちがいなく、べるがの<b>ほんとうの冒険者</b>だよ！」`
+        : `モリノコ「ありがとう、${state.name}！<br>でも精霊はまだ <b>${SPIRIT_TOTAL-state.spirits.length}人</b> 森にかくれているよ。<br>ほんもののべるがで、また会おうね！」`)
     : `モリノコ「つぎの精霊はね……<br><b>水のちかく</b>で見たことがあるよ！<br>なかまをふやして、またちょうせんしよう！」`;
   const elapsedMin = state.startedAt ? Math.max(1,Math.round((Date.now()-state.startedAt)/60000)) : null;
+  $("#ending-stats").style.flexDirection="column";
+  $("#ending-stats").style.alignItems="center";
   $("#ending-stats").innerHTML=`
-    <span>📖 なかま <b>${state.spirits.length}</b>体</span>
-    <span>🎒 アイテム <b>${state.items.length}</b>こ</span>
-    <span>⚔️ ちょうせん <b>${state.battleCount}</b>回</span>
-    <span>⭐ Lv <b>${state.lv}</b></span>
-    ${elapsedMin!==null ? `<span>⏱️ たびの時間 <b>${elapsedMin}</b>分</span>` : ""}`;
+    <div style="margin-bottom:.6em;font-size:1.15em;color:#ffe9a8;">${travelerTitle()}</div>
+    <div style="display:flex;gap:2.5em;justify-content:center;flex-wrap:wrap;">
+      <span>📖 なかま <b>${state.spirits.length}</b>体</span>
+      <span>🌟 かけら <b>${kakeraCount()}</b> / 5</span>
+      <span>🎒 アイテム <b>${state.items.length}</b>こ</span>
+      <span>⚔️ ちょうせん <b>${state.battleCount}</b>回</span>
+      <span>⭐ Lv <b>${state.lv}</b></span>
+      ${elapsedMin!==null ? `<span>⏱️ たびの時間 <b>${elapsedMin}</b>分</span>` : ""}
+    </div>`;
   e.classList.add("show");
 }
 $("#ending-btn").addEventListener("click",()=>{

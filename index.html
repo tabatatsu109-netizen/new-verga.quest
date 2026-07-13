@@ -619,6 +619,17 @@ img{pointer-events:none;-webkit-user-drag:none;}
   45%{transform:translate(-10px,-7px);}60%{transform:translate(9px,8px);}
   75%{transform:translate(-6px,4px);}90%{transform:translate(4px,-3px);}
 }
+@keyframes critShake{
+  0%{transform:translate(0,0) scale(1);}
+  6%,10%{transform:translate(0,0) scale(.97);}
+  22%{transform:translate(-20px,11px) scale(1.03);}
+  36%{transform:translate(17px,-13px);}
+  50%{transform:translate(-14px,-10px);}
+  64%{transform:translate(12px,11px);}
+  78%{transform:translate(-7px,5px);}
+  92%{transform:translate(4px,-3px);}
+  100%{transform:translate(0,0) scale(1);}
+}
 
 /* ===== アイテム獲得 ===== */
 #itemget{
@@ -741,6 +752,7 @@ img{pointer-events:none;-webkit-user-drag:none;}
 #scr-battle.enrage #battle-vignette{box-shadow:inset 0 0 120px 40px rgba(200,30,50,.45);}
 #battle-shake{position:absolute;inset:0;}
 #battle-shake.hit{animation:bigShake .5s ease;}
+#battle-shake.hit.crit{animation:critShake .55s cubic-bezier(.2,.9,.3,1);}
 #boss-plate{
   position:absolute;left:50%;top:2.5%;transform:translateX(-50%);
   width:min(88%,640px);text-align:center;z-index:5;
@@ -2976,8 +2988,9 @@ $("#cmd-atk").addEventListener("click",()=>{
   const crit=Math.random()<0.12;
   if(crit) dmg*=1.7;
   dmg=Math.round(dmg);
-  sHit(); buzz(30);
-  const sh=$("#battle-shake"); sh.classList.remove("hit"); void sh.offsetWidth; sh.classList.add("hit");
+  sHit();
+  if(crit){ flashWhite(); buzz(60); } else { buzz(30); }
+  const sh=$("#battle-shake"); sh.classList.remove("hit","crit"); void sh.offsetWidth; sh.classList.add("hit"); if(crit) sh.classList.add("crit");
   dmgNum(innerWidth*0.5,innerHeight*0.3,dmg,crit?"crit":"");
   bLog(crit?`かいしんの いちげき！！\n<b>${dmg}</b>のダメージ！`:`${state.name}のこうげき！\n<b>${dmg}</b>のダメージ！`);
   bossTakeDamage(dmg);
